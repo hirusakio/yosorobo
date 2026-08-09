@@ -19,9 +19,32 @@ h1{font-size:20px;margin:0;font-weight:700}.info{font-size:11px;color:var(--mute
 <script>
 const FILES=['words1.txt','words2.txt','words3.txt','words4.txt','words5.txt'];
 const river=document.getElementById('river'),info=document.getElementById('info'),loading=document.getElementById('loading');
-let words=[],lastWord='',timer=null,lane=0;
+let words=[],lastWord='',timer=null,laneCursor=0,lastSpawn=[];
 function pick(){if(!words.length)return '';let w=words[Math.floor(Math.random()*words.length)];if(words.length>1)while(w===lastWord)w=words[Math.floor(Math.random()*words.length)];lastWord=w;return w}
-function spawn(){const word=pick();if(!word)return;const el=document.createElement('span');el.className='word';el.textContent=word;const vw=innerWidth;const lanes=Math.max(4,Math.floor(vw/105));const font=21+Math.random()*8;el.style.fontSize=font+'px';el.style.opacity=(.86+Math.random()*.08).toFixed(2);river.appendChild(el);const width=el.getBoundingClientRect().width;const laneW=vw/lanes;const thisLane=lane++%lanes;const center=thisLane*laneW+laneW/2;const jitter=(Math.random()-.5)*laneW*.34;const x=Math.max(0,Math.min(vw-width,center-width/2+jitter));el.style.left=x+'px';el.style.animationDuration=(13+Math.random()*3)+'s';el.addEventListener('animationend',()=>el.remove(),{once:true})}
-function start(){if(timer)clearInterval(timer);for(let i=0;i<18;i++)setTimeout(spawn,i*135);timer=setInterval(spawn,245)}
+function spawn(){
+  if(!words.length)return;
+  const vw=innerWidth;
+  const lanes=Math.max(4,Math.floor(vw/120));
+  if(lastSpawn.length!==lanes)lastSpawn=new Array(lanes).fill(0);
+  const now=performance.now();
+  let chosen=-1;
+  for(let i=0;i<lanes;i++){
+    const idx=(laneCursor+i)%lanes;
+    if(now-lastSpawn[idx]>1250){chosen=idx;laneCursor=(idx+1)%lanes;break}
+  }
+  if(chosen<0)return;
+  lastSpawn[chosen]=now;
+  const el=document.createElement('span');el.className='word';el.textContent=pick();
+  const font=22+Math.random()*5;el.style.fontSize=font+'px';el.style.opacity=(.88+Math.random()*.04).toFixed(2);river.appendChild(el);
+  const width=el.getBoundingClientRect().width;
+  const laneW=vw/lanes;
+  const center=chosen*laneW+laneW/2;
+  const jitter=(Math.random()-.5)*laneW*.12;
+  const x=Math.max(2,Math.min(vw-width-2,center-width/2+jitter));
+  el.style.left=x+'px';
+  el.style.animationDuration=(14.6+Math.random()*.5)+'s';
+  el.addEventListener('animationend',()=>el.remove(),{once:true});
+}
+function start(){if(timer)clearInterval(timer);for(let i=0;i<12;i++)setTimeout(spawn,i*260);timer=setInterval(spawn,260)}
 Promise.all(FILES.map(f=>fetch(f).then(r=>{if(!r.ok)throw Error(f);return r.text()}))).then(ts=>{words=[...new Set(ts.join('\n').split(/\r?\n/).map(x=>x.trim()).filter(Boolean))];loading.remove();info.textContent=`全${words.length}語から自動表示`;start()}).catch(()=>{loading.textContent='語彙の読み込みに失敗しました';info.textContent='エラー'});
 </script></body></html>
