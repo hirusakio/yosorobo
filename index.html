@@ -30,7 +30,7 @@ function spawn(){
   let chosen=-1;
   for(let i=0;i<lanes;i++){
     const idx=(laneCursor+i)%lanes;
-    if(now-lastSpawn[idx]>1450){chosen=idx;laneCursor=(idx+1)%lanes;break}
+    if(now-lastSpawn[idx]>970){chosen=idx;laneCursor=(idx+1)%lanes;break}
   }
   if(chosen<0)return;
   lastSpawn[chosen]=now;
@@ -45,6 +45,6 @@ function spawn(){
   el.style.animationDuration=(14.1+Math.random()*1.6)+'s';
   el.addEventListener('animationend',()=>el.remove(),{once:true});
 }
-function start(){if(timer)clearInterval(timer);for(let i=0;i<12;i++)setTimeout(spawn,i*260);timer=setInterval(spawn,260)}
+function start(){if(timer)clearInterval(timer);for(let i=0;i<18;i++)setTimeout(spawn,i*175);timer=setInterval(spawn,175)}
 Promise.all(FILES.map(f=>fetch(f).then(r=>{if(!r.ok)throw Error(f);return r.text()}))).then(ts=>{words=[...new Set(ts.join('\n').split(/\r?\n/).map(x=>x.trim()).filter(Boolean))];loading.remove();info.textContent=`全${words.length}語から自動表示`;start()}).catch(()=>{loading.textContent='語彙の読み込みに失敗しました';info.textContent='エラー'});
 </script></body></html>
