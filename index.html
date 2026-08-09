@@ -1,1 +1,56 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>要素ロボ</title><style>:root{--bg:#f6f6f4;--p:#fff;--t:#171717;--m:#737373;--b:#ddd;--a:#171717;--at:#fff;color-scheme:light dark}@media(prefers-color-scheme:dark){:root{--bg:#111;--p:#1b1b1b;--t:#f3f3f3;--m:#aaa;--b:#343434;--a:#f3f3f3;--at:#111}}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--t);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}main{width:min(920px,100%);margin:auto;padding:16px 14px 40px}.top{position:sticky;top:0;z-index:5;padding:8px 0 12px;background:color-mix(in srgb,var(--bg) 91%,transparent);backdrop-filter:blur(12px)}h1{font-size:22px;margin:0 0 5px}.sub,.meta{font-size:12px;color:var(--m)}.sub{margin:0 0 12px}.controls{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end}label{display:block;margin:0 0 5px;font-size:12px;color:var(--m)}select,button{font:inherit;border:1px solid var(--b);border-radius:12px}select{width:100%;padding:11px 12px;background:var(--p);color:var(--t)}button{cursor:pointer}.primary{padding:11px 18px;background:var(--a);color:var(--at);min-width:100px}.meta{display:flex;justify-content:space-between;margin:12px 2px 10px}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.word{min-height:58px;padding:10px 8px;border:1px solid var(--b);border-radius:12px;background:var(--p);color:var(--t);display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.35;word-break:keep-all;overflow-wrap:anywhere}@media(max-width:640px){.grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.word{min-height:54px;font-size:15px}}@media(max-width:390px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}</style></head><body><main><section class="top"><h1>要素ロボ</h1><p class="sub">語彙プールから単語をランダム表示します。</p><div class="controls"><div><label for="count">表示する語数</label><select id="count"><option>20</option><option selected>50</option><option>100</option><option>200</option></select></div><button id="shuffle" class="primary">更新</button></div></section><div class="meta"><span id="status">読み込み中…</span><span id="total"></span></div><section id="grid" class="grid"></section></main><script>const FILES=['words1.txt','words2.txt','words3.txt','words4.txt','words5.txt'];let words=[];const $=x=>document.getElementById(x),grid=$('grid'),count=$('count');function sample(a,n){const b=a.slice();for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b.slice(0,Math.min(n,b.length))}function render(){const s=sample(words,+count.value);grid.replaceChildren(...s.map(w=>{const d=document.createElement('div');d.className='word';d.textContent=w;return d}));$('status').textContent=`${s.length}語を表示中`;$('total').textContent=`全${words.length}語`}$('shuffle').onclick=render;count.onchange=render;Promise.all(FILES.map(f=>fetch(f).then(r=>r.text()))).then(ts=>{words=[...new Set(ts.join('\n').split(/\r?\n/).map(x=>x.trim()).filter(Boolean))];render()}).catch(()=>{$('status').textContent='語彙の読み込みに失敗しました'});</script></body></html>
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>要素ロボ</title>
+<style>
+:root{--bg:#f6f6f4;--text:#171717;--muted:#777;--panel:rgba(246,246,244,.88);--border:#ddd;color-scheme:light dark}
+@media(prefers-color-scheme:dark){:root{--bg:#111;--text:#f3f3f3;--muted:#aaa;--panel:rgba(17,17,17,.88);--border:#333}}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+#river{position:fixed;inset:0;overflow:hidden}
+header{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:max(12px,env(safe-area-inset-top)) 14px 10px;background:linear-gradient(to bottom,var(--panel) 65%,transparent);pointer-events:none}
+h1{font-size:20px;margin:0;font-weight:700}.info{font-size:11px;color:var(--muted);white-space:nowrap}
+.word{position:absolute;top:-70px;left:0;display:block;white-space:nowrap;font-weight:600;line-height:1.2;will-change:transform,opacity;animation-name:fall;animation-timing-function:linear;animation-fill-mode:forwards;user-select:none;pointer-events:none;text-shadow:0 1px 0 color-mix(in srgb,var(--bg) 65%,transparent)}
+@keyframes fall{0%{transform:translate3d(0,-80px,0);opacity:0}5%{opacity:1}92%{opacity:1}100%{transform:translate3d(0,calc(100vh + 140px),0);opacity:0}}
+.loading{position:fixed;inset:0;display:grid;place-items:center;font-size:14px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div id="river"></div>
+<header><h1>要素ロボ</h1><div class="info" id="info">読み込み中…</div></header>
+<div id="loading" class="loading">語彙を読み込んでいます…</div>
+<script>
+const FILES=['words1.txt','words2.txt','words3.txt','words4.txt','words5.txt'];
+const river=document.getElementById('river'),info=document.getElementById('info'),loading=document.getElementById('loading');
+let words=[],lastWord='',timer=null;
+function pick(){if(!words.length)return '';let w=words[Math.floor(Math.random()*words.length)];if(words.length>1){while(w===lastWord)w=words[Math.floor(Math.random()*words.length)]}lastWord=w;return w}
+function spawn(){
+  const word=pick(); if(!word)return;
+  const el=document.createElement('span'); el.className='word'; el.textContent=word;
+  const vw=window.innerWidth;
+  const font=Math.max(17,Math.min(30,18+Math.random()*9));
+  el.style.fontSize=font+'px';
+  el.style.opacity=(.78+Math.random()*.22).toFixed(2);
+  river.appendChild(el);
+  const width=el.getBoundingClientRect().width;
+  const maxX=Math.max(8,vw-width-8);
+  el.style.left=(8+Math.random()*Math.max(0,maxX-8))+'px';
+  const duration=6.5+Math.random()*5;
+  el.style.animationDuration=duration+'s';
+  el.addEventListener('animationend',()=>el.remove(),{once:true});
+}
+function start(){
+  if(timer)clearInterval(timer);
+  for(let i=0;i<12;i++)setTimeout(spawn,i*170);
+  timer=setInterval(()=>{spawn(); if(Math.random()<.30)setTimeout(spawn,120+Math.random()*180)},330);
+}
+Promise.all(FILES.map(f=>fetch(f).then(r=>{if(!r.ok)throw new Error(f);return r.text()}))).then(ts=>{
+  words=[...new Set(ts.join('\n').split(/\r?\n/).map(x=>x.trim()).filter(Boolean))];
+  loading.remove(); info.textContent=`全${words.length}語から自動表示`;
+  start();
+}).catch(()=>{loading.textContent='語彙の読み込みに失敗しました';info.textContent='エラー'});
+</script>
+</body>
+</html>
