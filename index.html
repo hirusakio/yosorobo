@@ -30,19 +30,19 @@ function spawn(){
   let chosen=-1;
   for(let i=0;i<lanes;i++){
     const idx=(laneCursor+i)%lanes;
-    if(now-lastSpawn[idx]>1250){chosen=idx;laneCursor=(idx+1)%lanes;break}
+    if(now-lastSpawn[idx]>1450){chosen=idx;laneCursor=(idx+1)%lanes;break}
   }
   if(chosen<0)return;
   lastSpawn[chosen]=now;
   const el=document.createElement('span');el.className='word';el.textContent=pick();
-  const font=22+Math.random()*5;el.style.fontSize=font+'px';el.style.opacity=(.88+Math.random()*.04).toFixed(2);river.appendChild(el);
+  const font=20.5+Math.random()*8;el.style.fontSize=font+'px';el.style.opacity=(.88+Math.random()*.04).toFixed(2);river.appendChild(el);
   const width=el.getBoundingClientRect().width;
   const laneW=vw/lanes;
   const center=chosen*laneW+laneW/2;
   const jitter=(Math.random()-.5)*laneW*.12;
   const x=Math.max(2,Math.min(vw-width-2,center-width/2+jitter));
   el.style.left=x+'px';
-  el.style.animationDuration=(14.6+Math.random()*.5)+'s';
+  el.style.animationDuration=(14.1+Math.random()*1.6)+'s';
   el.addEventListener('animationend',()=>el.remove(),{once:true});
 }
 function start(){if(timer)clearInterval(timer);for(let i=0;i<12;i++)setTimeout(spawn,i*260);timer=setInterval(spawn,260)}
