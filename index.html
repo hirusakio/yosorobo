@@ -7,13 +7,24 @@
 const FILES=['words1.txt','words2.txt','words3.txt','words4.txt','words5.txt','words6.txt'],track=document.getElementById('track'),info=document.getElementById('info'),loading=document.getElementById('loading');
 const EXCLUDE=new Set(['真鍮','合板','石材','鋼','断熱材','建材','路肩','陸橋','貯水槽','排気口','換気口','字体','字間','キャプション','製本','トナー','受付票','壮行会','セットプレー']);
 const COLORS=['#d65b55','#d96d47','#cf7c3d','#d18a32','#bd9832','#9aa23b','#74a64c','#4d9864','#3f9b78','#3c978b','#438ca5','#3e82b4','#4b78be','#5c78bf','#6b6fc1','#7969bd','#8a67b7','#9b62ae','#aa609f','#b95f8d','#c35f7a','#c76569','#b86f5c','#a67c51','#8f8750','#778e56','#5e9361','#499071','#438b81','#46868f','#507f9d','#5e78a7','#6d72ad','#7c6caf','#8c68aa','#9c65a2','#aa6597','#b36b89','#9f875c','#8e8f57','#7b9659','#689b62','#579b70','#4c987f','#4b928e','#528b9b','#6083a4','#707ba8','#8174a8','#926ea4'];
-const ALT_FONTS=['"Hiragino Mincho ProN","Yu Mincho",serif','"Yu Gothic",sans-serif','"Hiragino Maru Gothic ProN","Hiragino Maru Gothic Pro",sans-serif','Georgia,"Times New Roman",serif'];
+const ALT_FONTS=[
+ {family:'"Hiragino Mincho ProN","Yu Mincho",serif',weight:'500'},
+ {family:'"Yu Mincho","Hiragino Mincho ProN",serif',weight:'400'},
+ {family:'"Hiragino Maru Gothic ProN","Hiragino Maru Gothic Pro",sans-serif',weight:'600'},
+ {family:'"Hiragino Kaku Gothic StdN","Hiragino Kaku Gothic ProN",sans-serif',weight:'800'},
+ {family:'"YuKyokasho","Yu Kyokasho",serif',weight:'500'},
+ {family:'"Klee","Klee One","Hiragino Mincho ProN",serif',weight:'500'},
+ {family:'"Tsukushi A Round Gothic","Hiragino Maru Gothic ProN",sans-serif',weight:'600'},
+ {family:'"Tsukushi B Round Gothic","Hiragino Maru Gothic ProN",sans-serif',weight:'600'},
+ {family:'"Hiragino Mincho ProN",serif',weight:'700'},
+ {family:'Georgia,"Times New Roman","Hiragino Mincho ProN",serif',weight:'500'}
+];
 let words=[],sheetHeight=0,y=0,last=0,loopCount=0;
 function shuffle(a){const b=a.slice();for(let i=b.length-1;i;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
 function decorateWord(s){s.style.color='';if(Math.random()<.20)s.style.color=COLORS[Math.floor(Math.random()*COLORS.length)]}
 function fontSizeFor(text){const len=Array.from(text).length;const random=(Math.random()-.5)*10;const lengthBias=(len-3)*0.38;return Math.max(19,Math.min(31,25.2+random-lengthBias))}
-function chooseFontIndex(prevAlt){if(Math.random()>=.20)return -1;let i=Math.floor(Math.random()*4);if(i===prevAlt)i=(i+1+Math.floor(Math.random()*3))%4;return i}
-function applyFont(s,i){s.style.fontFamily='';s.style.fontWeight='600';if(i>=0){s.style.fontFamily=ALT_FONTS[i];if(i===0||i===3)s.style.fontWeight='500'}}
+function chooseFontIndex(prevAlt){if(Math.random()>=.20)return -1;let i=Math.floor(Math.random()*ALT_FONTS.length);if(i===prevAlt){do{i=Math.floor(Math.random()*ALT_FONTS.length)}while(i===prevAlt)}return i}
+function applyFont(s,i){s.style.fontFamily='';s.style.fontWeight='600';if(i>=0){s.style.fontFamily=ALT_FONTS[i].family;s.style.fontWeight=ALT_FONTS[i].weight}}
 function makeWord(text,fontIndex){const s=document.createElement('span');s.className='word';s.textContent=text;s.style.fontSize=fontSizeFor(text)+'px';applyFont(s,fontIndex);decorateWord(s);return s}
 function makeSheet(){const sh=document.createElement('div');sh.className='sheet';const pool=shuffle(words);let p=0;const portrait=innerHeight>=innerWidth;const screens=portrait?10:6;const minRows=portrait?192:120;const rows=Math.max(minRows,Math.ceil(innerHeight/31)*screens+16);for(let r=0;r<rows;r++){const row=document.createElement('div');row.className='row';row.style.transform=`translateX(${-Math.floor(Math.random()*100)}px)`;let prevAlt=-1;for(let i=0;i<12;i++){const fontIndex=chooseFontIndex(prevAlt);row.appendChild(makeWord(pool[p++%pool.length],fontIndex));prevAlt=fontIndex}sh.appendChild(row)}return sh}
 function rerollColors(sheet){sheet.querySelectorAll('.word').forEach(decorateWord)}
