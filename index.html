@@ -7,44 +7,54 @@
 <style>
 :root{--bg:#f6f6f4;--text:#171717;--muted:#777;--panel:rgba(246,246,244,.88);color-scheme:light dark}
 @media(prefers-color-scheme:dark){:root{--bg:#111;--text:#f3f3f3;--muted:#aaa;--panel:rgba(17,17,17,.88)}}
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 #river{position:fixed;inset:0;overflow:hidden}
+#track{position:absolute;left:0;right:0;top:0;will-change:transform;animation:scrollDown 34s linear infinite}
+.sheet{width:100%;display:flex;flex-wrap:wrap;align-content:flex-start;gap:4px 9px;padding:4px 3px 0}
+.word{display:inline-block;white-space:nowrap;font-weight:600;line-height:1.12;opacity:.9;user-select:none;pointer-events:none;font-size:clamp(20.5px,5.9vw,28.5px)}
+@keyframes scrollDown{from{transform:translateY(-50%)}to{transform:translateY(0)}}
 header{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:max(12px,env(safe-area-inset-top)) 14px 10px;background:linear-gradient(to bottom,var(--panel) 65%,transparent);pointer-events:none}
 h1{font-size:20px;margin:0;font-weight:700}.info{font-size:11px;color:var(--muted);white-space:nowrap}
-.word{position:absolute;top:-80px;left:0;display:block;white-space:nowrap;font-weight:600;line-height:1.2;will-change:transform,opacity;animation-name:fall;animation-timing-function:linear;animation-fill-mode:forwards;user-select:none;pointer-events:none;opacity:.9}
-@keyframes fall{0%{transform:translate3d(0,-90px,0);opacity:0}4%{opacity:.9}94%{opacity:.9}100%{transform:translate3d(0,calc(100vh + 160px),0);opacity:0}}
 .loading{position:fixed;inset:0;display:grid;place-items:center;font-size:14px;color:var(--muted)}
-</style></head><body>
-<div id="river"></div><header><h1>要素ロボ</h1><div class="info" id="info">読み込み中…</div></header><div id="loading" class="loading">語彙を読み込んでいます…</div>
+</style>
+</head>
+<body>
+<div id="river"><div id="track"></div></div>
+<header><h1>要素ロボ</h1><div class="info" id="info">読み込み中…</div></header>
+<div id="loading" class="loading">語彙を読み込んでいます…</div>
 <script>
 const FILES=['words1.txt','words2.txt','words3.txt','words4.txt','words5.txt'];
-const river=document.getElementById('river'),info=document.getElementById('info'),loading=document.getElementById('loading');
-let words=[],lastWord='',timer=null,laneCursor=0,lastSpawn=[];
-function pick(){if(!words.length)return '';let w=words[Math.floor(Math.random()*words.length)];if(words.length>1)while(w===lastWord)w=words[Math.floor(Math.random()*words.length)];lastWord=w;return w}
-function spawn(){
-  if(!words.length)return;
-  const vw=innerWidth;
-  const lanes=Math.max(4,Math.floor(vw/120));
-  if(lastSpawn.length!==lanes)lastSpawn=new Array(lanes).fill(0);
-  const now=performance.now();
-  let chosen=-1;
-  for(let i=0;i<lanes;i++){
-    const idx=(laneCursor+i)%lanes;
-    if(now-lastSpawn[idx]>970){chosen=idx;laneCursor=(idx+1)%lanes;break}
+const track=document.getElementById('track'),info=document.getElementById('info'),loading=document.getElementById('loading');
+let words=[];
+function shuffled(a){const b=a.slice();for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
+function makeSheet(){
+  const sheet=document.createElement('div');sheet.className='sheet';
+  const pool=shuffled(words);
+  const target=Math.max(220,Math.ceil(innerHeight/26)*Math.ceil(innerWidth/90)*2);
+  for(let i=0;i<target;i++){
+    const s=document.createElement('span');s.className='word';s.textContent=pool[i%pool.length];
+    const size=20.5+Math.random()*8;s.style.fontSize=size+'px';
+    s.style.opacity=(.88+Math.random()*.04).toFixed(2);
+    sheet.appendChild(s);
   }
-  if(chosen<0)return;
-  lastSpawn[chosen]=now;
-  const el=document.createElement('span');el.className='word';el.textContent=pick();
-  const font=20.5+Math.random()*8;el.style.fontSize=font+'px';el.style.opacity=(.88+Math.random()*.04).toFixed(2);river.appendChild(el);
-  const width=el.getBoundingClientRect().width;
-  const laneW=vw/lanes;
-  const center=chosen*laneW+laneW/2;
-  const jitter=(Math.random()-.5)*laneW*.12;
-  const x=Math.max(2,Math.min(vw-width-2,center-width/2+jitter));
-  el.style.left=x+'px';
-  el.style.animationDuration=(14.1+Math.random()*1.6)+'s';
-  el.addEventListener('animationend',()=>el.remove(),{once:true});
+  return sheet;
 }
-function start(){if(timer)clearInterval(timer);for(let i=0;i<18;i++)setTimeout(spawn,i*175);timer=setInterval(spawn,175)}
-Promise.all(FILES.map(f=>fetch(f).then(r=>{if(!r.ok)throw Error(f);return r.text()}))).then(ts=>{words=[...new Set(ts.join('\n').split(/\r?\n/).map(x=>x.trim()).filter(Boolean))];loading.remove();info.textContent=`全${words.length}語から自動表示`;start()}).catch(()=>{loading.textContent='語彙の読み込みに失敗しました';info.textContent='エラー'});
-</script></body></html>
+function build(){
+  track.replaceChildren();
+  const first=makeSheet();track.appendChild(first);
+  const second=first.cloneNode(true);track.appendChild(second);
+  requestAnimationFrame(()=>{
+    const h=first.getBoundingClientRect().height;
+    const pxPerSec=42;
+    track.style.animationDuration=(h/pxPerSec)+'s';
+  });
+}
+Promise.all(FILES.map(f=>fetch(f).then(r=>{if(!r.ok)throw Error(f);return r.text()}))).then(ts=>{
+  words=[...new Set(ts.join('\n').split(/\r?\n/).map(x=>x.trim()).filter(Boolean))];
+  loading.remove();info.textContent=`全${words.length}語から自動表示`;build();
+  let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(build,180)});
+}).catch(()=>{loading.textContent='語彙の読み込みに失敗しました';info.textContent='エラー'});
+</script>
+</body>
+</html>
