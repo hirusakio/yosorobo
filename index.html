@@ -18,9 +18,9 @@ function shuffle(a){const b=a.slice();for(let i=b.length-1;i;i--){const j=Math.f
 function nextWord(){if(p>=pool.length){pool=shuffle(words);p=0}return pool[p++]}
 function decorateWord(s){if(Math.random()<.25)s.style.color=COLORS[Math.floor(Math.random()*COLORS.length)];else s.style.color=''}
 function fontSizeFor(text){const len=Array.from(text).length;const scale=isPhone()?1:1.5;return Math.max(15*scale,Math.min(31*scale,(23.2+(Math.random()-.5)*16-(len-3)*.38)*scale))}
-function chooseFont(prev){let i=Math.random()<.5?0:1;if(i===prev)i=1-i;return i}
+function chooseFont(){return Math.random()<.5?0:1}
 function makeWord(text,fontIndex){const s=document.createElement('span'),f=FONTS[fontIndex];s.className='word';s.textContent=text;s.style.fontSize=fontSizeFor(text)+'px';s.style.fontFamily=f.family;s.style.fontWeight=f.weight;decorateWord(s);return s}
-function fillRow(row){row.replaceChildren();const offset=Math.floor(Math.random()*100);row.style.transform=`translateX(${-offset}px)`;const target=layoutWidth()+offset+180;let prev=-1,guard=0;while(row.scrollWidth<target&&guard<80){const fi=chooseFont(prev);row.appendChild(makeWord(nextWord(),fi));prev=fi;guard++}}
+function fillRow(row){row.replaceChildren();const offset=Math.floor(Math.random()*100);row.style.transform=`translateX(${-offset}px)`;const target=layoutWidth()+offset+180;let guard=0;while(row.scrollWidth<target&&guard<80){row.appendChild(makeWord(nextWord(),chooseFont()));guard++}}
 function build(){const rh=rowHeight();track.replaceChildren();pool=shuffle(words);p=0;const count=Math.ceil(innerHeight/rh)+5;for(let i=0;i<count;i++){const row=document.createElement('div');row.className='row';track.appendChild(row);fillRow(row)}y=-rh;last=0;track.style.transform=`translate3d(0,${y}px,0)`}
 function recycle(){const rh=rowHeight(),row=track.lastElementChild;if(!row)return;track.insertBefore(row,track.firstElementChild);fillRow(row);y-=rh}
 function animate(t){if(!last)last=t;const dt=Math.min(40,t-last);last=t;y+=SPEED*dt/1000;while(y>=0)recycle();track.style.transform=`translate3d(0,${y}px,0)`;requestAnimationFrame(animate)}
