@@ -7,18 +7,8 @@
 const FILES=['words1.txt','words2.txt','words3.txt','words4.txt','words5.txt','words6.txt','words7.txt','noun_candidates_1000plus.txt','verb_candidates.txt','adjective_candidates_2000.txt'],track=document.getElementById('track'),info=document.getElementById('info'),loading=document.getElementById('loading');
 const EXCLUDE=new Set(['真鍮','合板','石材','鋼','断熱材','建材','路肩','陸橋','貯水槽','排気口','換気口','字体','字間','キャプション','製本','トナー','受付票','壮行会','セットプレー']);
 const COLORS=['#d65b55','#d96d47','#cf7c3d','#d18a32','#d6b82f','#c9ad18','#e0b62a','#d4a918','#bfa51f','#9aa23b','#74a64c','#4d9864','#3f9b78','#3c978b','#438ca5','#3e82b4','#4b78be','#5c78bf','#6b6fc1','#7969bd','#8a67b7','#9b62ae','#aa609f','#b95f8d','#c35f7a','#c76569','#b86f5c','#a67c51','#5e9361','#499071','#438b81','#46868f','#507f9d','#5e78a7','#6d72ad','#7c6caf','#8c68aa','#9c65a2','#aa6597','#b36b89','#9f875c','#8e8f57','#7b9659','#689b62','#579b70','#4c987f','#4b928e','#528b9b','#926ea4'];
-const FONTS=[
-{family:'"Noto Sans JP",sans-serif',weight:'600',chance:30},
-{family:'"Noto Serif JP",serif',weight:'600',chance:30},
-{family:'"M PLUS Rounded 1c",sans-serif',weight:'500',chance:5},
-{family:'"Dela Gothic One",sans-serif',weight:'400',chance:5},
-{family:'"DotGothic16",sans-serif',weight:'400',chance:5},
-{family:'"Hachi Maru Pop",cursive',weight:'400',chance:5},
-{family:'"Zen Kurenaido",sans-serif',weight:'400',chance:5},
-{family:'"Kaisei Decol",serif',weight:'500',chance:5},
-{family:'"RocknRoll One",sans-serif',weight:'400',chance:5},
-{family:'"Reggae One",sans-serif',weight:'400',chance:5}];
-const SPEED=42;let words=[],y=0,last=0,resizeTimer=null,pool=[],p=0;
+const FONTS=[{family:'"Noto Sans JP",sans-serif',weight:'600',chance:30},{family:'"Noto Serif JP",serif',weight:'600',chance:30},{family:'"M PLUS Rounded 1c",sans-serif',weight:'500',chance:5},{family:'"Dela Gothic One",sans-serif',weight:'400',chance:5},{family:'"DotGothic16",sans-serif',weight:'400',chance:5},{family:'"Hachi Maru Pop",cursive',weight:'400',chance:5},{family:'"Zen Kurenaido",sans-serif',weight:'400',chance:5},{family:'"Kaisei Decol",serif',weight:'500',chance:5},{family:'"RocknRoll One",sans-serif',weight:'400',chance:5},{family:'"Reggae One",sans-serif',weight:'400',chance:5}];
+const SPEED=42;let words=[],y=0,last=0,resizeTimer=null,pool=[],p=0,idleHandle=null,pendingRow=null;
 const isPhone=()=>Math.min(screen.width,screen.height)<=600;const rowHeight=()=>isPhone()?31:46;const layoutWidth=()=>isPhone()?Math.min(innerWidth,innerHeight):innerWidth;
 function shuffle(a){const b=a.slice();for(let i=b.length-1;i;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
 function nextWord(){if(p>=pool.length){pool=shuffle(words);p=0}return pool[p++]}
@@ -26,9 +16,11 @@ function decorateWord(s){if(Math.random()<.25)s.style.color=COLORS[Math.floor(Ma
 function fontSizeFor(text){const len=Array.from(text).length,scale=isPhone()?1:1.5;return Math.max(15*scale,Math.min(31*scale,(23.2+(Math.random()-.5)*16-(len-3)*.38)*scale))}
 function chooseFont(prev){let r=Math.random()*100,sum=0,idx=0;for(let i=0;i<FONTS.length;i++){sum+=FONTS[i].chance;if(r<sum){idx=i;break}}if(idx===prev){r=Math.random()*100;sum=0;for(let i=0;i<FONTS.length;i++){sum+=FONTS[i].chance;if(r<sum){idx=i;break}}}return idx}
 function makeWord(text,fontIndex){const s=document.createElement('span'),f=FONTS[fontIndex];s.className='word';s.textContent=text;s.style.fontSize=fontSizeFor(text)+'px';s.style.fontFamily=f.family;s.style.fontWeight=f.weight;decorateWord(s);return s}
-function fillRow(row){row.replaceChildren();const offset=Math.floor(Math.random()*100);row.style.transform=`translateX(${-offset}px)`;const target=layoutWidth()+offset+180;let prev=-1,guard=0;while(row.scrollWidth<target&&guard<80){const fi=chooseFont(prev);row.appendChild(makeWord(nextWord(),fi));prev=fi;guard++}}
-function build(){const rh=rowHeight();track.replaceChildren();pool=shuffle(words);p=0;const count=Math.ceil(innerHeight/rh)+5;for(let i=0;i<count;i++){const row=document.createElement('div');row.className='row';track.appendChild(row);fillRow(row)}y=-rh;last=0;track.style.transform=`translate3d(0,${y}px,0)`}
-function recycle(){const rh=rowHeight(),row=track.lastElementChild;if(!row)return;track.insertBefore(row,track.firstElementChild);fillRow(row);y-=rh}
+function wordsPerRow(){const target=layoutWidth()+300;return Math.ceil(target/(isPhone()?52:82))+5}
+function fillRow(row){const frag=document.createDocumentFragment(),count=wordsPerRow(),offset=Math.floor(Math.random()*100);let prev=-1;for(let i=0;i<count;i++){const fi=chooseFont(prev);frag.appendChild(makeWord(nextWord(),fi));prev=fi}row.style.transform=`translateX(${-offset}px)`;row.replaceChildren(frag)}
+function scheduleFill(row){if(!row)return;pendingRow=row;if(idleHandle!==null)return;const run=()=>{idleHandle=null;const r=pendingRow;pendingRow=null;if(r&&r.isConnected)fillRow(r)};if('requestIdleCallback'in window)idleHandle=requestIdleCallback(run,{timeout:120});else idleHandle=setTimeout(run,40)}
+function build(){const rh=rowHeight();track.replaceChildren();pool=shuffle(words);p=0;pendingRow=null;if(idleHandle!==null){if('cancelIdleCallback'in window)cancelIdleCallback(idleHandle);else clearTimeout(idleHandle);idleHandle=null}const count=Math.ceil(innerHeight/rh)+7;for(let i=0;i<count;i++){const row=document.createElement('div');row.className='row';fillRow(row);track.appendChild(row)}y=-rh;last=0;track.style.transform=`translate3d(0,${y}px,0)`}
+function recycle(){const rh=rowHeight(),row=track.lastElementChild;if(!row)return;track.insertBefore(row,track.firstElementChild);y-=rh;scheduleFill(track.lastElementChild)}
 function animate(t){if(!last)last=t;const dt=Math.min(40,t-last);last=t;y+=SPEED*dt/1000;while(y>=0)recycle();track.style.transform=`translate3d(0,${y}px,0)`;requestAnimationFrame(animate)}
 addEventListener('resize',()=>{if(isPhone())return;clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(words.length)build()},350)});
 Promise.all(FILES.map(f=>fetch(f).then(r=>{if(!r.ok)throw Error();return r.text()}))).then(ts=>{words=[...new Set(ts.join('\n').split(/\r?\n/).map(x=>x.trim()).filter(Boolean))].filter(w=>!EXCLUDE.has(w));loading.remove();info.textContent=`全${words.length}語から自動表示`;build();requestAnimationFrame(animate)}).catch(()=>{loading.textContent='語彙の読み込みに失敗しました';info.textContent='エラー'});
