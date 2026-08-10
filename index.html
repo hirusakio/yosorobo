@@ -5,6 +5,7 @@
 </style></head><body><div id="river"><div id="track"></div></div><header><h1>要素ロボ</h1><div class="info" id="info">読み込み中…</div></header><div id="loading" class="loading">語彙を読み込んでいます…</div>
 <script>
 const FILES=['words1.txt','words2.txt','words3.txt','words4.txt','words5.txt','words6.txt'],track=document.getElementById('track'),info=document.getElementById('info'),loading=document.getElementById('loading');
+const EXCLUDE=new Set(['真鍮','合板','石材','鋼','断熱材','建材','路肩','陸橋','貯水槽','排気口','換気口','字体','字間','キャプション','製本','トナー','受付票','壮行会','セットプレー']);
 const COLORS=['#d65b55','#d96d47','#cf7c3d','#d18a32','#bd9832','#9aa23b','#74a64c','#4d9864','#3f9b78','#3c978b','#438ca5','#3e82b4','#4b78be','#5c78bf','#6b6fc1','#7969bd','#8a67b7','#9b62ae','#aa609f','#b95f8d','#c35f7a','#c76569','#b86f5c','#a67c51','#8f8750','#778e56','#5e9361','#499071','#438b81','#46868f','#507f9d','#5e78a7','#6d72ad','#7c6caf','#8c68aa','#9c65a2','#aa6597','#b36b89','#b57478','#ae7e68','#9f875c','#8e8f57','#7b9659','#689b62','#579b70','#4c987f','#4b928e','#528b9b','#6083a4','#707ba8','#8174a8','#926ea4','#a16d9b','#ad708e','#b47780','#b17f72','#a68866','#989064','#899765','#7a9c6b'];
 let words=[],sheetHeight=0,y=0,last=0,loopCount=0;
 function shuffle(a){const b=a.slice();for(let i=b.length-1;i;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
@@ -14,5 +15,5 @@ function makeSheet(){const sh=document.createElement('div');sh.className='sheet'
 function rerollColors(sheet){sheet.querySelectorAll('.word').forEach(decorateWord)}
 function build(){track.replaceChildren();const a=makeSheet();track.appendChild(a);const b=a.cloneNode(true);rerollColors(b);track.appendChild(b);sheetHeight=a.offsetHeight;y=-sheetHeight;last=0;loopCount=0;track.style.transform=`translate3d(0,${y}px,0)`}
 function animate(t){if(!last)last=t;const dt=Math.min(40,t-last);last=t;y+=42*dt/1000;if(sheetHeight&&y>=0){y-=sheetHeight;loopCount++;const sheets=track.querySelectorAll('.sheet');sheets.forEach(rerollColors)}track.style.transform=`translate3d(0,${y}px,0)`;requestAnimationFrame(animate)}
-Promise.all(FILES.map(f=>fetch(f).then(r=>{if(!r.ok)throw Error();return r.text()}))).then(ts=>{words=[...new Set(ts.join('\n').split(/\r?\n/).map(x=>x.trim()).filter(Boolean))];loading.remove();info.textContent=`全${words.length}語から自動表示`;build();requestAnimationFrame(animate)}).catch(()=>{loading.textContent='語彙の読み込みに失敗しました';info.textContent='エラー'});
+Promise.all(FILES.map(f=>fetch(f).then(r=>{if(!r.ok)throw Error();return r.text()}))).then(ts=>{words=[...new Set(ts.join('\n').split(/\r?\n/).map(x=>x.trim()).filter(Boolean))].filter(w=>!EXCLUDE.has(w));loading.remove();info.textContent=`全${words.length}語から自動表示`;build();requestAnimationFrame(animate)}).catch(()=>{loading.textContent='語彙の読み込みに失敗しました';info.textContent='エラー'});
 </script></body></html>
