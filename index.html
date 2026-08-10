@@ -21,9 +21,9 @@ const ALT_FONTS=[
 ];
 let words=[],sheetHeight=0,y=0,last=0,loopCount=0;
 function shuffle(a){const b=a.slice();for(let i=b.length-1;i;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
-function decorateWord(s){s.style.color='';if(Math.random()<.20)s.style.color=COLORS[Math.floor(Math.random()*COLORS.length)]}
+function decorateWord(s){s.style.color='';if(Math.random()<.50)s.style.color=COLORS[Math.floor(Math.random()*COLORS.length)]}
 function fontSizeFor(text){const len=Array.from(text).length;const random=(Math.random()-.5)*10;const lengthBias=(len-3)*0.38;return Math.max(19,Math.min(31,25.2+random-lengthBias))}
-function chooseFontIndex(prevAlt){if(Math.random()>=.20)return -1;let i=Math.floor(Math.random()*ALT_FONTS.length);if(i===prevAlt){do{i=Math.floor(Math.random()*ALT_FONTS.length)}while(i===prevAlt)}return i}
+function chooseFontIndex(prevAlt){if(Math.random()>=.50)return -1;let i=Math.floor(Math.random()*ALT_FONTS.length);if(i===prevAlt){do{i=Math.floor(Math.random()*ALT_FONTS.length)}while(i===prevAlt)}return i}
 function applyFont(s,i){s.style.fontFamily='';s.style.fontWeight='600';if(i>=0){s.style.fontFamily=ALT_FONTS[i].family;s.style.fontWeight=ALT_FONTS[i].weight}}
 function makeWord(text,fontIndex){const s=document.createElement('span');s.className='word';s.textContent=text;s.style.fontSize=fontSizeFor(text)+'px';applyFont(s,fontIndex);decorateWord(s);return s}
 function makeSheet(){const sh=document.createElement('div');sh.className='sheet';const pool=shuffle(words);let p=0;const portrait=innerHeight>=innerWidth;const screens=portrait?10:6;const minRows=portrait?192:120;const rows=Math.max(minRows,Math.ceil(innerHeight/31)*screens+16);for(let r=0;r<rows;r++){const row=document.createElement('div');row.className='row';row.style.transform=`translateX(${-Math.floor(Math.random()*100)}px)`;let prevAlt=-1;for(let i=0;i<12;i++){const fontIndex=chooseFontIndex(prevAlt);row.appendChild(makeWord(pool[p++%pool.length],fontIndex));prevAlt=fontIndex}sh.appendChild(row)}return sh}
