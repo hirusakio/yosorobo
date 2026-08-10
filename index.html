@@ -11,8 +11,9 @@
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 #river{position:fixed;inset:0;overflow:hidden}
 #track{position:absolute;left:0;right:0;top:0;will-change:transform;animation:scrollDown 34s linear infinite}
-.sheet{width:100%;display:flex;flex-wrap:wrap;align-content:flex-start;gap:4px 9px;padding:4px 3px 0}
-.word{display:inline-block;white-space:nowrap;font-weight:600;line-height:1.12;opacity:.9;user-select:none;pointer-events:none;font-size:clamp(20.5px,5.9vw,28.5px)}
+.sheet{width:100%;overflow:hidden;padding:3px 0 0}
+.row{display:flex;align-items:baseline;gap:8px;width:max-content;min-width:calc(100vw + 90px);margin-left:-45px;white-space:nowrap;line-height:1.12}
+.word{display:inline-block;flex:0 0 auto;white-space:nowrap;font-weight:600;opacity:.9;user-select:none;pointer-events:none}
 @keyframes scrollDown{from{transform:translateY(-50%)}to{transform:translateY(0)}}
 header{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:max(12px,env(safe-area-inset-top)) 14px 10px;background:linear-gradient(to bottom,var(--panel) 65%,transparent);pointer-events:none}
 h1{font-size:20px;margin:0;font-weight:700}.info{font-size:11px;color:var(--muted);white-space:nowrap}
@@ -28,15 +29,31 @@ const FILES=['words1.txt','words2.txt','words3.txt','words4.txt','words5.txt'];
 const track=document.getElementById('track'),info=document.getElementById('info'),loading=document.getElementById('loading');
 let words=[];
 function shuffled(a){const b=a.slice();for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
+function randomColor(){
+  const colors=['#e05757','#d4862c','#b59b27','#4c9b62','#3f8fa8','#557bc7','#8766c2','#bd5f9c'];
+  return colors[Math.floor(Math.random()*colors.length)];
+}
+function makeWord(text){
+  const s=document.createElement('span');s.className='word';s.textContent=text;
+  s.style.fontSize=(20.5+Math.random()*8)+'px';
+  s.style.opacity=(.88+Math.random()*.04).toFixed(2);
+  if(Math.random()<.045)s.style.color=randomColor();
+  return s;
+}
 function makeSheet(){
   const sheet=document.createElement('div');sheet.className='sheet';
-  const pool=shuffled(words);
-  const target=Math.max(220,Math.ceil(innerHeight/26)*Math.ceil(innerWidth/90)*2);
-  for(let i=0;i<target;i++){
-    const s=document.createElement('span');s.className='word';s.textContent=pool[i%pool.length];
-    const size=20.5+Math.random()*8;s.style.fontSize=size+'px';
-    s.style.opacity=(.88+Math.random()*.04).toFixed(2);
-    sheet.appendChild(s);
+  const pool=shuffled(words);let p=0;
+  const rows=Math.max(34,Math.ceil(innerHeight/27)*3);
+  const targetWidth=innerWidth+120;
+  for(let r=0;r<rows;r++){
+    const row=document.createElement('div');row.className='row';
+    row.style.marginLeft=(-(25+Math.random()*55))+'px';
+    sheet.appendChild(row);
+    let measured=0;
+    while(measured<targetWidth){
+      const s=makeWord(pool[p++%pool.length]);row.appendChild(s);
+      measured=row.scrollWidth;
+    }
   }
   return sheet;
 }
