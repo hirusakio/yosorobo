@@ -3,10 +3,8 @@
 .lotteryCard{width:min(78vw,330px);display:flex;flex-direction:column;align-items:center;padding:16px 12px 10px;border-radius:24px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.52);box-shadow:0 8px 26px rgba(0,0,0,.06)}
 .rerollEffectText{font-size:20px;font-weight:800;letter-spacing:.05em;color:#70431f;text-shadow:0 1px 0 rgba(255,255,255,.75)}
 .rerollEffectSub{margin-top:5px;font-size:12px;font-weight:600;color:rgba(91,55,28,.82)}
-.lotteryImageStage{position:relative;width:280px;height:205px;margin-top:4px;overflow:hidden;will-change:transform;animation:lotteryFloat 1.8s ease-in-out infinite alternate}
-.lotteryBase{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;border-radius:12px;opacity:.97}
-.lotteryDrumPhoto{position:absolute;left:67px;top:0;width:129px;height:127px;object-fit:fill;transform-origin:50% 50%;will-change:transform;animation:photoDrumSpin 3.6s linear infinite;filter:drop-shadow(0 1px 1px rgba(0,0,0,.08))}
+.lotteryImageStage{position:relative;width:280px;height:205px;margin-top:4px;display:grid;place-items:center;overflow:visible}
+.lotteryImage{width:100%;height:100%;object-fit:contain;display:block;will-change:transform;transform-origin:50% 55%;animation:lotteryRock 1.8s ease-in-out infinite alternate;filter:drop-shadow(0 5px 8px rgba(0,0,0,.12))}
 body.rerolling #track{opacity:.92}
-@keyframes photoDrumSpin{to{transform:rotate(360deg)}}
-@keyframes lotteryFloat{from{transform:translateY(1px)}to{transform:translateY(-3px)}}
-@media(max-width:600px){.lotteryCard{width:min(80vw,310px)}.lotteryImageStage{width:270px;height:197px}.lotteryDrumPhoto{left:65px;width:124px;height:122px}}
+@keyframes lotteryRock{0%{transform:translateY(2px) rotate(-1deg)}100%{transform:translateY(-3px) rotate(1deg)}}
+@media(max-width:600px){.lotteryCard{width:min(80vw,310px)}.lotteryImageStage{width:270px;height:197px}}
