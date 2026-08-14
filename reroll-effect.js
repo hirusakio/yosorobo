@@ -2,12 +2,20 @@
   function init(){
     const button=document.getElementById('reroll');
     const wrap=document.getElementById('rerollWrap');
+    const river=document.getElementById('river');
     if(!button||!wrap)return;
+
+    let inverted=false;
+    const setInverted=on=>{
+      inverted=on;
+      document.documentElement.classList.toggle('inverted',on);
+    };
+    if(river)river.addEventListener('click',()=>setInverted(!inverted));
 
     const svg=button.querySelector('svg');
     if(svg){
       svg.setAttribute('viewBox','0 0 48 48');
-      svg.innerHTML='<path d="M9 20A16 16 0 0 1 35 13" fill="none" stroke="#111" stroke-width="4.2" stroke-linecap="round"/><path d="M33 7L41 14L31 17Z" fill="#111"/><path d="M39 28A16 16 0 0 1 13 35" fill="none" stroke="#111" stroke-width="4.2" stroke-linecap="round"/><path d="M15 41L7 34L17 31Z" fill="#111"/>';
+      svg.innerHTML='<path d="M9 20A16 16 0 0 1 35 13" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round"/><path d="M33 7L41 14L31 17Z" fill="currentColor"/><path d="M39 28A16 16 0 0 1 13 35" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round"/><path d="M15 41L7 34L17 31Z" fill="currentColor"/>';
     }
 
     const overlay=document.createElement('div');
