@@ -2,15 +2,20 @@
   function init(){
     const button=document.getElementById('reroll');
     const wrap=document.getElementById('rerollWrap');
-    const river=document.getElementById('river');
+    const settingsPanel=document.getElementById('settingsPanel');
     if(!button||!wrap)return;
 
-    let inverted=false;
-    const setInverted=on=>{
-      inverted=on;
-      document.documentElement.classList.toggle('inverted',on);
-    };
-    if(river)river.addEventListener('click',()=>setInverted(!inverted));
+    if(settingsPanel&&!document.getElementById('darkToggle')){
+      const row=document.createElement('div');
+      row.className='settingRow';
+      row.innerHTML='<span>ダークモード</span><label class="settingToggle"><input id="darkToggle" type="checkbox"><span class="miniSwitch"></span></label>';
+      settingsPanel.prepend(row);
+      const darkToggle=row.querySelector('#darkToggle');
+      darkToggle.checked=document.documentElement.classList.contains('inverted');
+      darkToggle.addEventListener('change',()=>{
+        document.documentElement.classList.toggle('inverted',darkToggle.checked);
+      });
+    }
 
     const svg=button.querySelector('svg');
     if(svg){
