@@ -1,4 +1,28 @@
 (()=>{
+  const WORD_REPLACEMENTS=new Map([
+    ['手続','手続き'],
+    ['もち','餅'],
+    ['引き分ける','引き分け'],
+    ['むくむ','むくみ'],
+    ['バックレ','バックレる'],
+    ['利き○○','利き酒'],
+    ['利き〇〇','利き酒'],
+    ['ねぎ','ネギ'],
+    ['許し合う','許す']
+  ]);
+
+  if(typeof build==='function'){
+    const originalBuild=build;
+    build=function(){
+      if(Array.isArray(words)){
+        words=[...new Set(words.map(w=>WORD_REPLACEMENTS.get(w)??w))];
+        const infoEl=document.getElementById('info');
+        if(infoEl&&words.length)infoEl.textContent=`全${words.length}語から自動表示`;
+      }
+      return originalBuild();
+    };
+  }
+
   function init(){
     const button=document.getElementById('reroll');
     const wrap=document.getElementById('rerollWrap');
