@@ -1,0 +1,28 @@
+name: Normalize words once
+
+on:
+  push:
+    paths:
+      - 'scripts/normalize_words_once.py'
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: python scripts/normalize_words_once.py
+      - run: |
+          if git diff --quiet -- words.txt; then
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add words.txt
+          git commit -m 'Normalize selected word spellings'
+          git push
