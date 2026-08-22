@@ -61,6 +61,32 @@
     };
   }
 
+  function applyDefaultSettings(){
+    const font=document.getElementById('fontToggle');
+    const color=document.getElementById('colorToggle');
+    const size=document.getElementById('sizeToggle');
+    const length=document.getElementById('lengthToggle');
+    const speedInput=document.getElementById('speedRange');
+    const speedText=document.getElementById('speedValue');
+    const dark=document.getElementById('darkToggle');
+
+    if(font) font.checked=true;
+    if(color) color.checked=true;
+    if(size) size.checked=true;
+    if(length) length.checked=true;
+    if(speedInput) speedInput.value='36';
+    if(speedText) speedText.textContent='36';
+    if(dark) dark.checked=false;
+
+    document.documentElement.classList.remove('inverted');
+    if(typeof fontVariation!=='undefined') fontVariation=true;
+    if(typeof colorVariation!=='undefined') colorVariation=true;
+    if(typeof sizeVariation!=='undefined') sizeVariation=true;
+    if(typeof lengthCorrection!=='undefined') lengthCorrection=true;
+    if(typeof speed!=='undefined') speed=36;
+    if(typeof applySpeed==='function') applySpeed();
+  }
+
   function init(){
     const button=document.getElementById('reroll');
     const wrap=document.getElementById('rerollWrap');
@@ -70,14 +96,21 @@
     if(settingsPanel&&!document.getElementById('darkToggle')){
       const row=document.createElement('div');
       row.className='settingRow';
-      row.innerHTML='<span>ダークモード</span><label class="settingToggle"><input id="darkToggle" type="checkbox"><span class="miniSwitch"></span></label>';
+      row.innerHTML='<span>ダークモード</span><label class="settingToggle"><input id="darkToggle" type="checkbox" autocomplete="off"><span class="miniSwitch"></span></label>';
       settingsPanel.prepend(row);
       const darkToggle=row.querySelector('#darkToggle');
-      darkToggle.checked=document.documentElement.classList.contains('inverted');
+      darkToggle.checked=false;
       darkToggle.addEventListener('change',()=>{
         document.documentElement.classList.toggle('inverted',darkToggle.checked);
       });
     }
+
+    ['fontToggle','colorToggle','sizeToggle','lengthToggle','speedRange'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el)el.setAttribute('autocomplete','off');
+    });
+    applyDefaultSettings();
+    window.addEventListener('pageshow',()=>requestAnimationFrame(applyDefaultSettings));
 
     const svg=button.querySelector('svg');
     if(svg){
