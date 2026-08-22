@@ -22,3 +22,5 @@ for word in words:
         seen.add(word)
         out.append(word)
 path.write_text('\n'.join(out) + '\n', encoding='utf-8')
+
+# one-time normalization trigger
