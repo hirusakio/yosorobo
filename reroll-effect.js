@@ -49,6 +49,9 @@
     ['ひげ','ヒゲ']
   ]);
 
+  const SPEED_STAGES=[0,.25,.5,.75,1,1.25,1.5,1.75,2];
+  const BASE_SPEED=36;
+
   if(typeof build==='function'){
     const originalBuild=build;
     build=function(){
@@ -57,8 +60,59 @@
         const infoEl=document.getElementById('info');
         if(infoEl&&words.length)infoEl.textContent=`全${words.length}語から自動表示`;
       }
-      return originalBuild();
+      const result=originalBuild();
+      const wrap=document.getElementById('rerollWrap');
+      if(wrap)wrap.hidden=false;
+      applySpeedStage(currentSpeedStage());
+      return result;
     };
+  }
+
+  function currentSpeedStage(){
+    const input=document.getElementById('speedRange');
+    const i=input?Number(input.value):4;
+    return SPEED_STAGES[i]??1;
+  }
+
+  function formatSpeedStage(multiplier){
+    return `${Number.isInteger(multiplier)?multiplier:String(multiplier)}倍`;
+  }
+
+  function applySpeedStage(multiplier){
+    const trackEl=document.getElementById('track');
+    if(!trackEl)return;
+    if(multiplier===0){
+      if(typeof speed!=='undefined')speed=BASE_SPEED;
+      trackEl.style.animationPlayState='paused';
+      return;
+    }
+    if(typeof speed!=='undefined')speed=BASE_SPEED*multiplier;
+    trackEl.style.animationPlayState='running';
+    if(typeof applySpeed==='function')applySpeed();
+  }
+
+  function installSteppedSpeedControl(){
+    const oldInput=document.getElementById('speedRange');
+    const speedText=document.getElementById('speedValue');
+    if(!oldInput)return;
+
+    const input=oldInput.cloneNode(false);
+    input.id='speedRange';
+    input.type='range';
+    input.min='0';
+    input.max='8';
+    input.step='1';
+    input.value='4';
+    input.setAttribute('autocomplete','off');
+    input.setAttribute('aria-label','スクロール速度');
+    oldInput.replaceWith(input);
+
+    if(speedText) speedText.textContent='1倍';
+    input.addEventListener('input',()=>{
+      const multiplier=SPEED_STAGES[Number(input.value)]??1;
+      if(speedText)speedText.textContent=formatSpeedStage(multiplier);
+      applySpeedStage(multiplier);
+    });
   }
 
   function applyDefaultSettings(){
@@ -74,8 +128,8 @@
     if(color) color.checked=true;
     if(size) size.checked=true;
     if(length) length.checked=true;
-    if(speedInput) speedInput.value='36';
-    if(speedText) speedText.textContent='36';
+    if(speedInput) speedInput.value='4';
+    if(speedText) speedText.textContent='1倍';
     if(dark) dark.checked=false;
 
     document.documentElement.classList.remove('inverted');
@@ -83,8 +137,7 @@
     if(typeof colorVariation!=='undefined') colorVariation=true;
     if(typeof sizeVariation!=='undefined') sizeVariation=true;
     if(typeof lengthCorrection!=='undefined') lengthCorrection=true;
-    if(typeof speed!=='undefined') speed=36;
-    if(typeof applySpeed==='function') applySpeed();
+    applySpeedStage(1);
   }
 
   function init(){
@@ -92,6 +145,9 @@
     const wrap=document.getElementById('rerollWrap');
     const settingsPanel=document.getElementById('settingsPanel');
     if(!button||!wrap)return;
+
+    wrap.hidden=false;
+    installSteppedSpeedControl();
 
     if(settingsPanel&&!document.getElementById('darkToggle')){
       const row=document.createElement('div');
@@ -110,7 +166,10 @@
       if(el)el.setAttribute('autocomplete','off');
     });
     applyDefaultSettings();
-    window.addEventListener('pageshow',()=>requestAnimationFrame(applyDefaultSettings));
+    window.addEventListener('pageshow',()=>requestAnimationFrame(()=>{
+      applyDefaultSettings();
+      wrap.hidden=false;
+    }));
 
     const svg=button.querySelector('svg');
     if(svg){
@@ -129,7 +188,6 @@
       e.stopImmediatePropagation();
       if(busy)return;
       busy=true;
-      wrap.hidden=true;
       overlay.hidden=false;
       document.body.classList.add('rerolling');
       requestAnimationFrame(()=>requestAnimationFrame(()=>{
@@ -138,6 +196,7 @@
           setTimeout(()=>{
             overlay.hidden=true;
             document.body.classList.remove('rerolling');
+            wrap.hidden=false;
             busy=false;
           },250);
         },650);
