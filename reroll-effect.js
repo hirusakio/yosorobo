@@ -1,56 +1,15 @@
 (()=>{
   const WORD_REPLACEMENTS=new Map([
-    ['手続','手続き'],
-    ['もち','餅'],
-    ['引き分ける','引き分け'],
-    ['むくむ','むくみ'],
-    ['バックレ','バックレる'],
-    ['利き○○','利き酒'],
-    ['利き〇〇','利き酒'],
-    ['ねぎ','ネギ'],
-    ['許し合う','許す'],
-
-    ['売切れ','売り切れ'],
-    ['引越し','引っ越し'],
-    ['待合せ','待ち合わせ'],
-    ['からあげ','唐揚げ'],
-    ['こしょう','胡椒'],
-    ['サケ','鮭'],
-    ['イス','椅子'],
-    ['マンガ','漫画'],
-    ['ねじ','ネジ'],
-    ['ばね','バネ'],
-    ['判子','ハンコ'],
-    ['鞄','カバン'],
-    ['売場','売り場'],
-    ['申込み','申し込み'],
-    ['引継ぎ','引き継ぎ'],
-
-    ['受取','受け取り'],
-    ['申出','申し出'],
-    ['見掛け倒し','見かけ倒し'],
-    ['打合せ','打ち合わせ'],
-    ['締切','締め切り'],
-    ['肩書','肩書き'],
-    ['折込','折り込み'],
-    ['吹替','吹き替え'],
-    ['のこぎり','ノコギリ'],
-    ['尻尾','しっぽ'],
-    ['げっぷ','ゲップ'],
-    ['誕生会','誕生日会'],
-
-    ['湯のみ','湯飲み'],
-    ['画びょう','画鋲'],
-    ['ひまわり','ヒマワリ'],
-    ['しょうが','ショウガ'],
-    ['にんにく','ニンニク'],
-    ['おつり','お釣り'],
-    ['はがき','ハガキ'],
-    ['ひげ','ヒゲ']
+    ['手続','手続き'],['もち','餅'],['引き分ける','引き分け'],['むくむ','むくみ'],['バックレ','バックレる'],['利き○○','利き酒'],['利き〇〇','利き酒'],['ねぎ','ネギ'],['許し合う','許す'],
+    ['売切れ','売り切れ'],['引越し','引っ越し'],['待合せ','待ち合わせ'],['からあげ','唐揚げ'],['こしょう','胡椒'],['サケ','鮭'],['イス','椅子'],['マンガ','漫画'],['ねじ','ネジ'],['ばね','バネ'],['判子','ハンコ'],['鞄','カバン'],['売場','売り場'],['申込み','申し込み'],['引継ぎ','引き継ぎ'],
+    ['受取','受け取り'],['申出','申し出'],['見掛け倒し','見かけ倒し'],['打合せ','打ち合わせ'],['締切','締め切り'],['肩書','肩書き'],['折込','折り込み'],['吹替','吹き替え'],['のこぎり','ノコギリ'],['尻尾','しっぽ'],['げっぷ','ゲップ'],['誕生会','誕生日会'],
+    ['湯のみ','湯飲み'],['画びょう','画鋲'],['ひまわり','ヒマワリ'],['しょうが','ショウガ'],['にんにく','ニンニク'],['おつり','お釣り'],['はがき','ハガキ'],['ひげ','ヒゲ']
   ]);
 
   const SPEED_STAGES=[0,.25,.5,.75,1,1.25,1.5,1.75,2];
   const BASE_SPEED=36;
+  const SPEED_APPLY_DELAY=420;
+  let speedApplyTimer=null;
 
   if(typeof build==='function'){
     const originalBuild=build;
@@ -63,7 +22,7 @@
       const result=originalBuild();
       const wrap=document.getElementById('rerollWrap');
       if(wrap)wrap.hidden=false;
-      applySpeedStage(currentSpeedStage());
+      applySpeedStage(currentSpeedStage(),false);
       return result;
     };
   }
@@ -78,17 +37,48 @@
     return `${Number.isInteger(multiplier)?multiplier:String(multiplier)}倍`;
   }
 
-  function applySpeedStage(multiplier){
+  function getFlowAnimation(){
+    const trackEl=document.getElementById('track');
+    if(!trackEl||!trackEl.getAnimations)return null;
+    return trackEl.getAnimations().find(a=>a.animationName==='flow')||trackEl.getAnimations()[0]||null;
+  }
+
+  function applySpeedStage(multiplier,preservePosition=true){
     const trackEl=document.getElementById('track');
     if(!trackEl)return;
+    const animBefore=getFlowAnimation();
+    let progress=null;
+    if(preservePosition&&animBefore){
+      const timing=animBefore.effect&&animBefore.effect.getComputedTiming?animBefore.effect.getComputedTiming():null;
+      if(timing&&typeof timing.progress==='number')progress=timing.progress;
+    }
+
     if(multiplier===0){
-      if(typeof speed!=='undefined')speed=BASE_SPEED;
       trackEl.style.animationPlayState='paused';
+      const anim=getFlowAnimation();
+      if(anim)anim.pause();
       return;
     }
+
     if(typeof speed!=='undefined')speed=BASE_SPEED*multiplier;
     trackEl.style.animationPlayState='running';
     if(typeof applySpeed==='function')applySpeed();
+
+    requestAnimationFrame(()=>{
+      const anim=getFlowAnimation();
+      if(!anim)return;
+      if(progress!==null){
+        const timing=anim.effect&&anim.effect.getComputedTiming?anim.effect.getComputedTiming():null;
+        const duration=timing&&Number(timing.duration);
+        if(Number.isFinite(duration)&&duration>0)anim.currentTime=progress*duration;
+      }
+      anim.play();
+    });
+  }
+
+  function scheduleSpeedApply(multiplier){
+    clearTimeout(speedApplyTimer);
+    speedApplyTimer=setTimeout(()=>applySpeedStage(multiplier,true),SPEED_APPLY_DELAY);
   }
 
   function installSteppedSpeedControl(){
@@ -96,23 +86,37 @@
     const speedText=document.getElementById('speedValue');
     if(!oldInput)return;
 
-    const input=oldInput.cloneNode(false);
-    input.id='speedRange';
-    input.type='range';
-    input.min='0';
-    input.max='8';
-    input.step='1';
-    input.value='4';
-    input.setAttribute('autocomplete','off');
-    input.setAttribute('aria-label','スクロール速度');
-    oldInput.replaceWith(input);
+    const speedBox=oldInput.closest('.speedBox');
+    if(!speedBox)return;
+    speedBox.classList.add('speedControl');
+    speedBox.innerHTML=`
+      <button class="speedStepButton" id="speedMinus" type="button" aria-label="速度を下げる">−</button>
+      <div class="speedSliderWrap">
+        <input id="speedRange" type="range" min="0" max="8" step="1" value="4" autocomplete="off" aria-label="スクロール速度">
+        <div class="speedTicks" aria-hidden="true">${SPEED_STAGES.map(()=>'<i></i>').join('')}</div>
+      </div>
+      <button class="speedStepButton" id="speedPlus" type="button" aria-label="速度を上げる">＋</button>
+      <span id="speedValue">1倍</span>`;
 
-    if(speedText) speedText.textContent='1倍';
-    input.addEventListener('input',()=>{
-      const multiplier=SPEED_STAGES[Number(input.value)]??1;
-      if(speedText)speedText.textContent=formatSpeedStage(multiplier);
-      applySpeedStage(multiplier);
-    });
+    const input=document.getElementById('speedRange');
+    const value=document.getElementById('speedValue');
+    const minus=document.getElementById('speedMinus');
+    const plus=document.getElementById('speedPlus');
+
+    function previewAndSchedule(){
+      const index=Number(input.value);
+      const multiplier=SPEED_STAGES[index]??1;
+      if(value)value.textContent=formatSpeedStage(multiplier);
+      minus.disabled=index<=0;
+      plus.disabled=index>=SPEED_STAGES.length-1;
+      scheduleSpeedApply(multiplier);
+    }
+
+    input.addEventListener('input',previewAndSchedule);
+    input.addEventListener('change',previewAndSchedule);
+    minus.addEventListener('click',()=>{input.value=String(Math.max(0,Number(input.value)-1));previewAndSchedule()});
+    plus.addEventListener('click',()=>{input.value=String(Math.min(8,Number(input.value)+1));previewAndSchedule()});
+    previewAndSchedule();
   }
 
   function applyDefaultSettings(){
@@ -123,21 +127,26 @@
     const speedInput=document.getElementById('speedRange');
     const speedText=document.getElementById('speedValue');
     const dark=document.getElementById('darkToggle');
+    const minus=document.getElementById('speedMinus');
+    const plus=document.getElementById('speedPlus');
 
-    if(font) font.checked=true;
-    if(color) color.checked=true;
-    if(size) size.checked=true;
-    if(length) length.checked=true;
-    if(speedInput) speedInput.value='4';
-    if(speedText) speedText.textContent='1倍';
-    if(dark) dark.checked=false;
+    if(font)font.checked=true;
+    if(color)color.checked=true;
+    if(size)size.checked=true;
+    if(length)length.checked=true;
+    if(speedInput)speedInput.value='4';
+    if(speedText)speedText.textContent='1倍';
+    if(minus)minus.disabled=false;
+    if(plus)plus.disabled=false;
+    if(dark)dark.checked=false;
 
     document.documentElement.classList.remove('inverted');
-    if(typeof fontVariation!=='undefined') fontVariation=true;
-    if(typeof colorVariation!=='undefined') colorVariation=true;
-    if(typeof sizeVariation!=='undefined') sizeVariation=true;
-    if(typeof lengthCorrection!=='undefined') lengthCorrection=true;
-    applySpeedStage(1);
+    if(typeof fontVariation!=='undefined')fontVariation=true;
+    if(typeof colorVariation!=='undefined')colorVariation=true;
+    if(typeof sizeVariation!=='undefined')sizeVariation=true;
+    if(typeof lengthCorrection!=='undefined')lengthCorrection=true;
+    clearTimeout(speedApplyTimer);
+    applySpeedStage(1,false);
   }
 
   function init(){
@@ -156,20 +165,14 @@
       settingsPanel.prepend(row);
       const darkToggle=row.querySelector('#darkToggle');
       darkToggle.checked=false;
-      darkToggle.addEventListener('change',()=>{
-        document.documentElement.classList.toggle('inverted',darkToggle.checked);
-      });
+      darkToggle.addEventListener('change',()=>document.documentElement.classList.toggle('inverted',darkToggle.checked));
     }
 
     ['fontToggle','colorToggle','sizeToggle','lengthToggle','speedRange'].forEach(id=>{
-      const el=document.getElementById(id);
-      if(el)el.setAttribute('autocomplete','off');
+      const el=document.getElementById(id);if(el)el.setAttribute('autocomplete','off');
     });
     applyDefaultSettings();
-    window.addEventListener('pageshow',()=>requestAnimationFrame(()=>{
-      applyDefaultSettings();
-      wrap.hidden=false;
-    }));
+    window.addEventListener('pageshow',()=>requestAnimationFrame(()=>{applyDefaultSettings();wrap.hidden=false}));
 
     const svg=button.querySelector('svg');
     if(svg){
@@ -178,8 +181,7 @@
     }
 
     const overlay=document.createElement('div');
-    overlay.id='rerollEffect';
-    overlay.hidden=true;
+    overlay.id='rerollEffect';overlay.hidden=true;
     overlay.innerHTML='<div class="loadingSpinner" aria-hidden="true"></div><div class="rerollEffectText">再抽選中…</div>';
     document.body.appendChild(overlay);
 
@@ -187,20 +189,11 @@
     button.addEventListener('click',e=>{
       e.stopImmediatePropagation();
       if(busy)return;
-      busy=true;
-      overlay.hidden=false;
-      document.body.classList.add('rerolling');
-      requestAnimationFrame(()=>requestAnimationFrame(()=>{
-        setTimeout(()=>{
-          if(typeof build==='function')build();
-          setTimeout(()=>{
-            overlay.hidden=true;
-            document.body.classList.remove('rerolling');
-            wrap.hidden=false;
-            busy=false;
-          },250);
-        },650);
-      }));
+      busy=true;overlay.hidden=false;document.body.classList.add('rerolling');
+      requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(()=>{
+        if(typeof build==='function')build();
+        setTimeout(()=>{overlay.hidden=true;document.body.classList.remove('rerolling');wrap.hidden=false;busy=false},250);
+      },650)));
     },true);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
