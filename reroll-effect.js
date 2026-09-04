@@ -8,6 +8,8 @@
 
   const SPEED_STAGES=[0,.25,.5,.75,1,1.25,1.5,1.75,2];
   const BASE_SPEED=36;
+  const DEFAULT_SPEED_INDEX=5;
+  const DEFAULT_SPEED=1.25;
   const SPEED_APPLY_DELAY=420;
   let speedApplyTimer=null;
 
@@ -29,8 +31,8 @@
 
   function currentSpeedStage(){
     const input=document.getElementById('speedRange');
-    const i=input?Number(input.value):4;
-    return SPEED_STAGES[i]??1;
+    const i=input?Number(input.value):DEFAULT_SPEED_INDEX;
+    return SPEED_STAGES[i]??DEFAULT_SPEED;
   }
 
   function formatSpeedStage(multiplier){
@@ -83,7 +85,6 @@
 
   function installSteppedSpeedControl(){
     const oldInput=document.getElementById('speedRange');
-    const speedText=document.getElementById('speedValue');
     if(!oldInput)return;
 
     const speedBox=oldInput.closest('.speedBox');
@@ -92,11 +93,11 @@
     speedBox.innerHTML=`
       <button class="speedStepButton" id="speedMinus" type="button" aria-label="速度を下げる">−</button>
       <div class="speedSliderWrap">
-        <input id="speedRange" type="range" min="0" max="8" step="1" value="4" autocomplete="off" aria-label="スクロール速度">
+        <input id="speedRange" type="range" min="0" max="8" step="1" value="${DEFAULT_SPEED_INDEX}" autocomplete="off" aria-label="スクロール速度">
         <div class="speedTicks" aria-hidden="true">${SPEED_STAGES.map(()=>'<i></i>').join('')}</div>
       </div>
       <button class="speedStepButton" id="speedPlus" type="button" aria-label="速度を上げる">＋</button>
-      <span id="speedValue">1倍</span>`;
+      <span id="speedValue">1.25倍</span>`;
 
     const input=document.getElementById('speedRange');
     const value=document.getElementById('speedValue');
@@ -105,7 +106,7 @@
 
     function previewAndSchedule(){
       const index=Number(input.value);
-      const multiplier=SPEED_STAGES[index]??1;
+      const multiplier=SPEED_STAGES[index]??DEFAULT_SPEED;
       if(value)value.textContent=formatSpeedStage(multiplier);
       minus.disabled=index<=0;
       plus.disabled=index>=SPEED_STAGES.length-1;
@@ -134,8 +135,8 @@
     if(color)color.checked=true;
     if(size)size.checked=true;
     if(length)length.checked=true;
-    if(speedInput)speedInput.value='4';
-    if(speedText)speedText.textContent='1倍';
+    if(speedInput)speedInput.value=String(DEFAULT_SPEED_INDEX);
+    if(speedText)speedText.textContent='1.25倍';
     if(minus)minus.disabled=false;
     if(plus)plus.disabled=false;
     if(dark)dark.checked=false;
@@ -146,7 +147,7 @@
     if(typeof sizeVariation!=='undefined')sizeVariation=true;
     if(typeof lengthCorrection!=='undefined')lengthCorrection=true;
     clearTimeout(speedApplyTimer);
-    applySpeedStage(1,false);
+    applySpeedStage(DEFAULT_SPEED,false);
   }
 
   function init(){
