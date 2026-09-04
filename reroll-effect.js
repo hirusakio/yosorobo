@@ -7,9 +7,9 @@
   ]);
 
   const SPEED_STAGES=[0,.25,.5,.75,1,1.25,1.5,1.75,2];
-  const BASE_SPEED=36;
-  const DEFAULT_SPEED_INDEX=5;
-  const DEFAULT_SPEED=1.25;
+  const BASE_SPEED=45;
+  const DEFAULT_SPEED_INDEX=4;
+  const DEFAULT_SPEED=1;
   const SPEED_APPLY_DELAY=420;
   let speedApplyTimer=null;
 
@@ -97,7 +97,7 @@
         <div class="speedTicks" aria-hidden="true">${SPEED_STAGES.map(()=>'<i></i>').join('')}</div>
       </div>
       <button class="speedStepButton" id="speedPlus" type="button" aria-label="速度を上げる">＋</button>
-      <span id="speedValue">1.25倍</span>`;
+      <span id="speedValue">1倍</span>`;
 
     const input=document.getElementById('speedRange');
     const value=document.getElementById('speedValue');
@@ -136,7 +136,7 @@
     if(size)size.checked=true;
     if(length)length.checked=true;
     if(speedInput)speedInput.value=String(DEFAULT_SPEED_INDEX);
-    if(speedText)speedText.textContent='1.25倍';
+    if(speedText)speedText.textContent='1倍';
     if(minus)minus.disabled=false;
     if(plus)plus.disabled=false;
     if(dark)dark.checked=false;
