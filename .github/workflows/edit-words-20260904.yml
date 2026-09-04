@@ -1,10 +1,11 @@
-name: Edit words 20260904
+name: Edit words
 
 on:
   push:
     paths:
       - 'scripts/edit_words_20260904.py'
       - 'scripts/add_missing_replacements_20260904.py'
+      - 'scripts/edit_words_20260905.py'
       - '.github/workflows/edit-words-20260904.yml'
 
 permissions:
@@ -19,11 +20,12 @@ jobs:
         run: |
           python scripts/edit_words_20260904.py
           python scripts/add_missing_replacements_20260904.py
+          python scripts/edit_words_20260905.py
       - name: Commit words.txt if changed
         run: |
           if git diff --quiet -- words.txt; then exit 0; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add words.txt
-          git commit -m 'Complete vocabulary replacements'
+          git commit -m 'Update vocabulary cleanup'
           git push
