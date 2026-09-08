@@ -6,6 +6,7 @@ on:
       - 'scripts/edit_words_20260904.py'
       - 'scripts/add_missing_replacements_20260904.py'
       - 'scripts/edit_words_20260905.py'
+      - 'scripts/dedupe_pairs_20260908.py'
       - '.github/workflows/edit-words-20260904.yml'
 
 permissions:
@@ -21,6 +22,7 @@ jobs:
           python scripts/edit_words_20260904.py
           python scripts/add_missing_replacements_20260904.py
           python scripts/edit_words_20260905.py
+          python scripts/dedupe_pairs_20260908.py
       - name: Commit words.txt if changed
         run: |
           if git diff --quiet -- words.txt; then exit 0; fi
