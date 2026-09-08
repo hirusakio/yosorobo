@@ -8,6 +8,7 @@ on:
       - 'scripts/edit_words_20260905.py'
       - 'scripts/dedupe_pairs_20260908.py'
       - 'scripts/dedupe_pairs2_20260908.py'
+      - 'scripts/delete_words_20260909.py'
       - '.github/workflows/edit-words-20260904.yml'
 
 permissions:
@@ -25,6 +26,7 @@ jobs:
           python scripts/edit_words_20260905.py
           python scripts/dedupe_pairs_20260908.py
           python scripts/dedupe_pairs2_20260908.py
+          python scripts/delete_words_20260909.py
       - name: Commit words.txt if changed
         run: |
           if git diff --quiet -- words.txt; then exit 0; fi
