@@ -131,8 +131,8 @@
     const minus=document.getElementById('speedMinus');
     const plus=document.getElementById('speedPlus');
 
-    if(font)font.checked=true;
-    if(color)color.checked=true;
+    if(font)font.checked=false;
+    if(color)color.checked=false;
     if(size)size.checked=true;
     if(length)length.checked=true;
     if(speedInput)speedInput.value=String(DEFAULT_SPEED_INDEX);
@@ -142,8 +142,8 @@
     if(dark)dark.checked=false;
 
     document.documentElement.classList.remove('inverted');
-    if(typeof fontVariation!=='undefined')fontVariation=true;
-    if(typeof colorVariation!=='undefined')colorVariation=true;
+    if(typeof fontVariation!=='undefined')fontVariation=false;
+    if(typeof colorVariation!=='undefined')colorVariation=false;
     if(typeof sizeVariation!=='undefined')sizeVariation=true;
     if(typeof lengthCorrection!=='undefined')lengthCorrection=true;
     clearTimeout(speedApplyTimer);
